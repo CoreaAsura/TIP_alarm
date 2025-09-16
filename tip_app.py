@@ -13,15 +13,20 @@ TIP_COLUMNS = [
     "DIRECTION", "LAT", "LON", "INCL", "NEXT_REPORT", "ID", "HIGH_INTEREST", "OBJECT_NUMBER"
 ]
 
+# 데이터 로드 및 필터링
 if os.path.exists(CSV_PATH):
     df = pd.read_csv(CSV_PATH)
 
+    # 누락 컬럼 채우기
     for col in TIP_COLUMNS:
         if col not in df.columns:
             df[col] = None
     df = df[TIP_COLUMNS]
+
+    # MSG_EPOCH을 datetime으로 변환
     df["MSG_EPOCH"] = pd.to_datetime(df["MSG_EPOCH"], errors="coerce")
 
+    # 현재 시간 기준으로 24시간 이내 데이터 필터링
     now = datetime.utcnow()
     recent_df = df[df["MSG_EPOCH"] >= now - timedelta(hours=24)]
 
@@ -29,8 +34,9 @@ if os.path.exists(CSV_PATH):
         st.subheader("🕒 최근 24시간 이내 TIP MSG")
         st.dataframe(recent_df, use_container_width=True)
 
+        # 📥 CSV 다운로드 버튼
         st.download_button(
-            label="📥 최근 24시간 TIP MSG CSV 다운로드",
+            label="📥 최근 TIP MSG CSV 다운로드",
             data=recent_df.to_csv(index=False).encode("utf-8"),
             file_name="recent_tip_msg.csv",
             mime="text/csv"
